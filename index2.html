@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="">
+    <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico">
+
+    <title>URL Shortener Service</title>
+	
+	<meta name="description" content="Сервис сокращения длинных ссылок">
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <link href="sticky-footer.css" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css" />
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	<script src="dist/clipboard.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Begin page content -->
+    <main role="main" class="container">
+      <h1 class="mt-5">URL Shortener Service</h1>
+      <p class="lead">Сервис сокращения длинных ссылок</p>
+      <p>Use <a href="../sticky-footer-navbar/">the sticky footer with a fixed navbar</a> if need be, too.</p>
+    </main>
+	
+	<div class="d-flex justify-content-center">
+		<div style="width: 60%;">
+			<div class="input-group mb-3 input-group-lg" >
+			  <input id="txtOriginalUrl" type="text" class="form-control" placeholder="Вставьте текст ссылки в поле..." aria-label="Длинная ссылка" aria-describedby="basic-addon2">
+			  <div class="input-group-append">
+				<button id="btnShortenUrl" class="btn btn-outline-info" type="button">Сократить</button>
+			  </div>
+			</div>
+			<!-- the result of the search will be rendered inside this div -->
+			<div id="results" >
+				<div class="card">
+				  <div class="card-header">
+					<b>Короткая ссылка</b>
+				  </div>
+				  <div class="card-body">
+					<div class="input-group mb-3 input-group-lg">
+					  <input id="txtShortUrl" type="text" class="form-control" aria-describedby="basic-addon2">
+					  <div class="input-group-append">
+						<button id="btnCopy" data-clipboard-target="#txtShortUrl" class="btn btn-outline-info" type="button">Копировать</button>
+					  </div>
+					</div>	
+					<strong>Оригинальная ссылка: </strong><i><span id="dvOriginalUrl" class="text-muted"></span><i>
+				  </div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- footer -->
+	
+	
+	<!-- progress -->
+	<div id="cover-spin"></div>
+
+    <footer class="footer">
+      <div class="container">
+        <span class="text-muted">Place sticky footer content here.</span>
+      </div>
+    </footer>
+  </body>
+  
+<script>
+	$('#cover-spin').hide();
+	//$('#results').hide();
+	var btnCopy = document.getElementById('btnCopy');
+    var clipboard = new ClipboardJS(btnCopy);
+	
+	$("#btnShortenUrl").click(function() {
+	
+		var originalUrl = $("#txtOriginalUrl").val();
+		console.log(originalUrl);
+		
+		var expression = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi;
+		var regex = new RegExp(expression);
+		
+		if (originalUrl.match(regex)) 
+		{
+			console.log("Successful match");
+			$('#cover-spin').show(0);
+			var urls = [{ "url": originalUrl}];
+		
+			var request = $.ajax({
+				url: "https://t2m.kz/shortener",
+				method: "POST",
+				contentType:"application/json",
+				data: JSON.stringify(urls),
+				dataType: "json"
+			});
+			
+			request.done(function( msg ) {
+				$('#cover-spin').hide();
+				$('#results').show(0);
+				$("#txtOriginalUrl").val('');
+				console.log(msg);
+				var shortUrl = msg.result[0].shortUrl;
+				console.log(msg.result[0].shortUrl);
+				$("#txtShortUrl").val(shortUrl);
+				$("#dvOriginalUrl").html(originalUrl);
+			});
+			
+			request.fail(function( jqXHR, textStatus ) {
+				$('#cover-spin').hide();
+				alert( "Request failed: " + textStatus );
+			});
+		} 
+		else 
+		{
+			console.log("No match");
+			alert("Введенный текст не является ссылкой");
+			
+		}
+		
+		
+	});
+</script>
+</html>
